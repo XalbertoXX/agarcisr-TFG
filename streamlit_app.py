@@ -8,16 +8,11 @@ import os
 
 # Protocols Information
 protocols = {
-    'Protocol': {
-        'description': 'description',
-        'description_long': 'description_long',
-        'endpoint': 'endpoint'
+    'Diffie-Hellman 🤝': {
+        'description': 'A method of securely exchanging cryptographic keys over a public channel.',
+        'description_long': 'The Diffie-Hellman protocol is a method for securely exchanging cryptographic keys over a public channel. It allows two parties to agree upon a shared secret key, which can then be used for secure communication or encryption. The protocol relies on the mathematical properties of modular exponentiation to ensure that even if an eavesdropper intercepts the exchanged information, they cannot easily determine the shared secret key without solving a computationally difficult problem.',
+        'endpoint': 'diffie_hellman'
     },
-    'Protocol': {
-        'description': 'description',
-        'description_long': 'description_long',
-        'endpoint': 'endpoint'
-    }
 }
 
 # Streamlit Page Configuration
@@ -42,13 +37,14 @@ def test_protocol(endpoint, simulate=False):
 
         if response.status_code == 200:
             response_data = response.json()
-            # Display the response data
-            st.write(f"Response from server: {response_data}")
+            if not simulate:
+                # Display the response data
+                st.write(f"Response from server: {response_data}")
 
-            # Save response data along with the time to JSON file
-            response_data['response_time'] = response_time
-            with open('dh_exchange_data.json', 'w') as file:
-                json.dump(response_data, file)
+                # Save response data along with the time to JSON file
+                response_data['response_time'] = response_time
+                with open('dh_exchange_data.json', 'w') as file:
+                    json.dump(response_data, file)
 
         else:
             if not simulate:
@@ -76,6 +72,21 @@ def load_test_results(filename='test_results.json'):
 response_times_data = {protocol: [] for protocol in protocols.keys()}
 tests_count = {protocol: 0 for protocol in protocols.keys()}  # Tracks the number of tests for each protocol
 
+# Load previous test results, if available
+loaded_data = load_test_results()
+if loaded_data:
+    response_times_data = loaded_data
+else:
+    # Pre-populate data with simulated tests
+    for _ in range(10):  # Number of simulations
+        for protocol in protocols.keys():
+            response_time = test_protocol(protocols[protocol]['endpoint'], simulate=True)
+            if response_time is not None:
+                response_times_data[protocol].append(response_time)
+                tests_count[protocol] += 1
+    save_test_results(response_times_data)
+
+
 # Function to Plot Interactive Chart
 def plot_interactive_chart(data_frame):
     fig = px.line(data_frame, title="Protocol Performance Over Time")
@@ -90,6 +101,15 @@ if st.button(f'Test {selected_protocol}'):
     if response_time is not None:
         st.success(f"{selected_protocol} Response Time: {response_time:.3f} seconds")
         tests_count[selected_protocol] += 1
+
+        # Update response_times_data after testing a protocol
+        for protocol in response_times_data.keys():
+            if protocol == selected_protocol:
+                response_times_data[protocol].append(response_time)
+            else:
+                # Use the last known value for protocols not tested in this iteration
+                last_value = response_times_data[protocol][-1] if response_times_data[protocol] else 0
+                response_times_data[protocol].append(last_value)
 
         # Create the DataFrame from the updated response times data
         df = pd.DataFrame(response_times_data)
