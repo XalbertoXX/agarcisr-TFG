@@ -13,6 +13,12 @@ protocols = {
         'description_long': 'The Diffie-Hellman protocol is a method for securely exchanging cryptographic keys over a public channel. It allows two parties to agree upon a shared secret key, which can then be used for secure communication or encryption. The protocol relies on the mathematical properties of modular exponentiation to ensure that even if an eavesdropper intercepts the exchanged information, they cannot easily determine the shared secret key without solving a computationally difficult problem.',
         'endpoint': 'diffie_hellman'
     },
+    'RSA 🛡️': {
+        'description': 'It is a form of public-key cryptography that utilizes a pair of keys: a public key for encrypting messages and a private key for decrypting them.',
+        'description_long': ' In RSA, the public key is openly distributed and used for encrypting messages, while the private key is kept secret and used for decryption. RSA''s security hinges on the mathematical challenge of factoring large prime numbers. The protocol begins with the selection of two large prime numbers, which are then used to generate the public and private keys. These keys are mathematically linked, yet the private key cannot be feasibly derived from the public key due to the difficulty of the prime factorization problem, especially as the key size increases.',
+        'endpoint': 'rsa'
+    }
+    # Add other protocols as needed
 }
 
 # Streamlit Page Configuration
@@ -25,12 +31,21 @@ selected_protocol = st.sidebar.selectbox("Select Protocol", list(protocols.keys(
 # Protocol Description
 st.sidebar.info(protocols[selected_protocol]['description'])
 
+# Display a textbox for custom message input when RSA is selected
+if selected_protocol == 'RSA 🛡️':
+    user_message = st.sidebar.text_area("Enter your message for RSA encryption:", value="Hello, RSA!", max_chars=500)
+
 def test_protocol(endpoint, simulate=False):
     response_time = None
 
     try:
         start_time = time.time()
-        response = requests.get(f'http://localhost:5000/{endpoint}')
+        if endpoint == 'rsa':
+            # For RSA, send the user's custom message to the app.py endpoint
+            response = requests.post(f'http://localhost:5000/{endpoint}', json={'message': user_message})
+        else:
+            # For other protocols, maintain the original GET request functionality
+            response = requests.get(f'http://localhost:5000/{endpoint}')
 
         end_time = time.time()
         response_time = end_time - start_time
@@ -96,7 +111,11 @@ def plot_interactive_chart(data_frame):
 
 # Button to Test Protocol
 if st.button(f'Test {selected_protocol}'):
-    response_time = test_protocol(protocols[selected_protocol]['endpoint'])
+    # Options for message sending
+    if selected_protocol == 'RSA 🛡️':
+        response_time = test_protocol(protocols[selected_protocol]['endpoint'], user_message)
+    else:
+        response_time = test_protocol(protocols[selected_protocol]['endpoint'])
 
     if response_time is not None:
         st.success(f"{selected_protocol} Response Time: {response_time:.3f} seconds")
