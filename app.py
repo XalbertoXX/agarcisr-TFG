@@ -35,6 +35,18 @@ def diffie_hellman_route():
                 derived_key.update(shared_key)
                 final_key = derived_key.finalize()
 
+                # Return private key and public keys
+                return jsonify({
+                    'success': True, 
+                    'server1_private_key': private_key.private_bytes(
+                        encoding=serialization.Encoding.PEM,
+                        format=serialization.PrivateFormat.PKCS8,
+                        encryption_algorithm=serialization.NoEncryption()
+                    ).hex(),
+                    'server1_public_key': serialized_public_key.hex(),
+                    'server2_public_key': response_data['server_public_key'],
+                    'final_key': final_key.hex()
+                })
             except Exception as e:
                 return jsonify({'success': False, 'error': f'Error during key exchange: {str(e)}'})
         else:
