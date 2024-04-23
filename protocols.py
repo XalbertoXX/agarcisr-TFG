@@ -1,6 +1,6 @@
 from flask import Flask, request, jsonify
 from cryptography.hazmat.primitives import hashes, serialization
-from cryptography.hazmat.primitives.asymmetric import dh
+from cryptography.hazmat.primitives.asymmetric import dh, rsa, padding
 from cryptography.hazmat.backends import default_backend
 
 app = Flask(__name__)
@@ -38,6 +38,24 @@ def receive_public_key():
         })
     except Exception as e:
         return jsonify({'success': False, 'error': f'Key exchange failed: {str(e)}'})
+
+@app.route('/encrypt', methods=['POST'])
+def encrypt():
+    data = request.get_json()
+    public_key_data = bytes.fromhex(data['public_key'])
+    message = bytes.fromhex(data['message'])
+
+    public_key = serialization.load_pem_public_key(public_key_data, backend=default_backend())
+
+    encrypted_message = public_key.encrypt(
+        message,
+        padding.OAEP(mgf=padding.MGF1(algorithm=hashes.SHA256()), algorithm=hashes.SHA256(), label=None)
+    )
+
+    return jsonify({
+        'encrypted_message': encrypted_message.hex(),
+        'used_public_key': public_key_data.hex()
+    })
 
 if __name__ == '__main__':
     app.run(port=5001, debug=True)
