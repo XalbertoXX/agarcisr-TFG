@@ -1,24 +1,17 @@
+import streamlit as st
 import requests, time, json, os
 import pandas as pd
 import plotly.express as px
-import streamlit as st
 
-# Protocols Information
-protocols = {
-    'Diffie-Hellman 🤝': {
-        'description': 'A method of securely exchanging cryptographic keys over a public channel.',
-        'description_long': 'The Diffie-Hellman protocol is a method for securely exchanging cryptographic keys over a public channel. It allows two parties to agree upon a shared secret key, which can then be used for secure communication or encryption. The protocol relies on the mathematical properties of modular exponentiation to ensure that even if an eavesdropper intercepts the exchanged information, they cannot easily determine the shared secret key without solving a computationally difficult problem.',
-        'endpoint': 'diffie_hellman'
-    },
-    'RSA 🛡️': {
-        'description': 'A form of public-key cryptography using a pair of keys for encryption and decryption.',
-        'description_long': 'RSA uses a pair of keys, a public key for encryption and a private key for decryption. It is widely used for secure data transmission and involves complex computations that ensure security even with public disclosure of the encryption key.',
-        'endpoint': 'rsa'
-    }
-}
 
-st.set_page_config(page_title='Protocol Performance Comparison', layout='wide')
+# Connect to the database.
+conn = st.connection("postgresql", type="sql")
 
+# Perform query.
+df = conn.query('SELECT * FROM protocols;', ttl="10m")
+
+protocol_list = []
+# Put the data from the database into a list of protocol names
 def save_test_results(data, filename='test_results.json'):
     with open(filename, 'w') as file:
         json.dump(data, file)
@@ -66,13 +59,16 @@ def test_protocol(endpoint, simulate=False, user_message=None):
 
 # Load or initialize test results
 response_times_data = load_test_results()
-
+    
 # Protocol Selection
 st.sidebar.title("Protocol List 🌌")
-selected_protocol = st.sidebar.selectbox("Select Protocol", list(protocols.keys()))
+selected_protocol = st.sidebar.selectbox("Select Protocol", list(protocol_list))
+
+# Perform query to get the protocol data of the selected protocol
+df1 = conn.query(f'SELECT description FROM protocols WHERE name = "{selected_protocol}" ;', ttl="10m")
 
 # Protocol Description
-st.sidebar.info(protocols[selected_protocol]['description'])
+st.sidebar.info(df1)
 
 # Enhanced Sidebar for Protocol Information
 with st.sidebar:
