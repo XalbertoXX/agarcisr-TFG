@@ -4,16 +4,15 @@ import pandas as pd
 import plotly.express as px
 from sqlalchemy import text 
 
+# Set the page title and favicon
+st.set_page_config(page_title="Protocol Performance Test", page_icon="🚀")
 
-# Connect to the database.
-conn = st.connection("postgresql", type="sql")
+# Connection management
+if 'conn' not in st.session_state:
+    st.session_state.conn = st.connection("postgresql", type="sql")
 
-# Perform query.
-df = conn.query('SELECT * FROM protocols;', ttl="10m")
+conn = st.session_state.conn
 
-# Extract protocol names for the selection box
-protocol_list = df['name'].tolist()
-    
 # Save the results for  test results
 def save_test_results(protocol_name, time_seconds):
     query = text("""
@@ -25,8 +24,7 @@ def save_test_results(protocol_name, time_seconds):
         try:
             # Execute the query with parameters
             c.execute(query, {'protocol_name': protocol_name, 'time_seconds': time_seconds})
-            c.commit()
-            st.success("Insert was successful")
+            c.commit() # Commit the transaction
         except Exception as e:
             st.error(f"An error occurred: {e}")
             c.rollback()  # Roll back the transaction on error
@@ -39,10 +37,10 @@ def load_test_results(protocol_name):
         ORDER BY created_at ASC;
     """
     try:
-        df = conn.query(query, params={'protocol_name': protocol_name}, ttl="10m")
+        df = conn.query(query, params={'protocol_name': protocol_name}, ttl="5s")
         return df['time_seconds'].tolist() if not df.empty else []
     except Exception as e:
-        print("An error occurred:", e)
+        st.error(f"An error occurred: {e}")
         return []
 
 # Plot the interactive chart
@@ -82,7 +80,14 @@ def test_protocol(endpoint, simulate=False, user_message=None):
 
     return response_time
 
-# Protocol Selection
+
+# Perform query.
+df = conn.query('SELECT * FROM protocols;', ttl="10m")
+
+# Frontend main title, sidebar and tabs definition
+protocol_list = df['name'].tolist()
+
+# Sidebar
 st.sidebar.title("Protocol List 🌌")
 selected_protocol = st.sidebar.selectbox("Select Protocol", list(protocol_list))
 
@@ -97,7 +102,7 @@ with st.sidebar:
     st.title("Protocol Details 🧐")
     st.write(df1['description_long'].iloc[0])
 
-# Tabs for Test Protocols and Compare Protocols
+# Tabs
 tab1, tab2 = st.tabs(["Test Protocols", "Compare Protocols"])
 
 # Tab 1: Test Protocols
