@@ -54,7 +54,8 @@ def plot_interactive_chart(data_frame):
         st.write("Ooops...\n\nThere is no data available to plot, sorry 😢")
         
 # Test the protocol
-def test_protocol(endpoint, simulate=False, user_message=None):
+def test_protocol(endpoint, user_message):
+    simulate = False
     response_time = None
     try:
         start_time = time.time()
@@ -113,9 +114,17 @@ with tab1:
 
     if st.button(f'Test {selected_protocol}'):
         response_time = test_protocol(df1['endpoint'].iloc[0], user_message=user_message)
+        
         if response_time:
-            st.success(f"{selected_protocol} Response Time: {response_time:.3f} seconds")
+            st.success(f"Response Time: {response_time:.3f} seconds")
             save_test_results(selected_protocol, response_time)
+            st.write(f"The protocol {selected_protocol} was tested successfully! 🎉 \n\n"
+                    "During this time what was happening was that the program was sending a request to the server,"
+                    "and the server was processing the request and sending a response back."
+                    "The time it took for the server to respond is the response time.")
+
+            st.write(f"The lower the response time, the better the performance of the protocol. 🚀\n\n"
+                    "For more information, check the interactive chart on the 'Compare Protocols' tab. 📈 \n\nTchau! 👋🏽.")
 
 # Tab 2: Compare Protocols
 with tab2:
