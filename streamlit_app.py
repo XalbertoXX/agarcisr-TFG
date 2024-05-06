@@ -67,9 +67,8 @@ def test_protocol(endpoint, user_message):
         response_time = end_time - start_time
 
         if response.status_code == 200:
-            response_data = response.json()
+           # To be dealt with for each protocol response_data = response.json()
             if not simulate:
-                st.write(f"Response from server: {response_data}")
                 # Save response data
                 save_test_results(selected_protocol, response_time)
         else:
@@ -114,16 +113,16 @@ with tab1:
 
     if st.button(f'Test {selected_protocol}'):
         response_time = test_protocol(df1['endpoint'].iloc[0], user_message=user_message)
-        
+
         if response_time:
             st.success(f"Response Time: {response_time:.3f} seconds")
-            
-            st.write(f"The protocol {selected_protocol} was tested successfully! 🎉 \n\n"
-                    "During this time what was happening was that the program was sending a request to the server,"
-                    "and the server was processing the request and sending a response back."
-                    "The time it took for the server to respond is the response time.")
 
-            st.write(f"The lower the response time, the better the performance of the protocol. 🚀\n\n"
+            st.write(f"The protocol {selected_protocol} was tested successfully! 🎉 \n\n"
+                    "During this time the program was sending a request to the server,"
+                    " and the server was processing the request sending a response back."
+                    "The time it took for the server to respond is the response time.")
+            
+            st.write(f"The lower the response time, the better the performance of the protocol. 🚀\n"
                     "For more information, check the interactive chart on the 'Compare Protocols' tab. 📈 \n\nTchau! 👋🏽.")
             
 # Tab 2: Compare Protocols
