@@ -117,7 +117,7 @@ with tab1:
         
         if response_time:
             st.success(f"Response Time: {response_time:.3f} seconds")
-            save_test_results(selected_protocol, response_time)
+            
             st.write(f"The protocol {selected_protocol} was tested successfully! 🎉 \n\n"
                     "During this time what was happening was that the program was sending a request to the server,"
                     "and the server was processing the request and sending a response back."
@@ -125,7 +125,7 @@ with tab1:
 
             st.write(f"The lower the response time, the better the performance of the protocol. 🚀\n\n"
                     "For more information, check the interactive chart on the 'Compare Protocols' tab. 📈 \n\nTchau! 👋🏽.")
-
+            
 # Tab 2: Compare Protocols
 with tab2:
     comparison_protocols = st.multiselect("Select protocols to compare", protocol_list)
