@@ -1,4 +1,4 @@
-# Versión v0.1  agarcisr-TFG
+# Non Interactive Key Exchange (NIKEs)
 
 Este es el repositorio para la realización de mi trabajo de fin de grado centrado en el estudio e implementación de protocolos de intercambio de clave no interactivos (NIKE).
 
@@ -58,10 +58,27 @@ python protocols.py
 streamlit run streamlit_app.py
 ```
 Una vez que los servidores Flask estén en funcionamiento y el frontend de Streamlit esté ejecutándose, puedes acceder a la aplicación desde tu navegador web por el link proporcionado por consola o accediendo a localhost en el navegador.
+
+![image](https://github.com/community/community/assets/63263060/c76cd3a6-92e6-4645-b3dc-fec37f4ded39)
+<p align="right"><i>Figura 2</i></p>
+
 La interfaz de usuario es sencilla para su fácil navegación, contando únicamente con dos pestañas en las que alterar y una sidebar visible en todo momento para seleccionar y obtener información de los protocolos.
+
+![image](https://github.com/community/community/assets/63263060/541f58f3-f299-42f6-9611-a31e6705f495)
+<p align="right"><i>Figura 3</i></p>
+
 En la primera pestaña podemos correr el protocolo que se haya seleccionado en nuestra barra lateral. Si la ejecución es exitosa se mostrará un mensaje con el valor del tiempo requerido y otros factores de utilidad para el usuario que se ampliarán en las siguientes iteraciones.
+
+![alt text](image.png)
+<p align="right"><i>Figura 4</i></p>
+
 En la segunda pestaña podemos seleccionar diferentes protocolos para ver su comparación y diferencias en cuanto a rendimiento. También se ampliará con más funcionalidades y datos.
 
+![image](https://github.com/community/community/assets/63263060/00373c91-b291-4ba0-bb81-e7db650f1bcf)
+<p align="right"><i>Figura 5. Muestra de resultados</i></p>
+
+![image](https://github.com/community/community/assets/63263060/3b79efdf-560d-4b2e-af37-1df99117845b)
+<p align="right"><i>Figura 6. Comparación de protocolosa</i></p>
 
 ## Contribuciones
 Este proyecto es parte de mi trabajo de fin de grado. Las contribuciones, sugerencias o preguntas son bienvenidas a través de issues o pull requests en este repositorio.
