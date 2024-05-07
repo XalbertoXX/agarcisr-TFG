@@ -69,7 +69,7 @@ La interfaz de usuario es sencilla para su fácil navegación, contando únicame
 
 En la primera pestaña podemos correr el protocolo que se haya seleccionado en nuestra barra lateral. Si la ejecución es exitosa se mostrará un mensaje con el valor del tiempo requerido y otros factores de utilidad para el usuario que se ampliarán en las siguientes iteraciones.
 
-![alt text](image.png)
+![image](https://github.com/XalbertoXX/agarcisr-TFG/assets/63263060/138efa33-2138-425c-bd7b-452154ed4248)
 <p align="right"><i>Figura 4</i></p>
 
 En la segunda pestaña podemos seleccionar diferentes protocolos para ver su comparación y diferencias en cuanto a rendimiento. También se ampliará con más funcionalidades y datos.
