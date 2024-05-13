@@ -59,7 +59,7 @@ def test_protocol(endpoint, user_message):
     response_time = None
     try:
         start_time = time.time()
-        if endpoint == 'rsa' and user_message:
+        if (endpoint == 'rsa' or endpoint == 'swoosh') and user_message:
             response = requests.post(f'http://localhost:5000/{endpoint}', json={'message': user_message})
         else:
             response = requests.get(f'http://localhost:5000/{endpoint}')
