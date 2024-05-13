@@ -108,8 +108,8 @@ tab1, tab2 = st.tabs(["Test Protocols", "Compare Protocols"])
 # Tab 1: Test Protocols
 with tab1:
     user_message = ""
-    if selected_protocol == 'RSA 📜':
-        user_message = st.text_area("Enter your message for RSA encryption:")
+    if selected_protocol == 'RSA 📜' or selected_protocol == 'Swoosh ⚡':
+        user_message = st.text_area("Enter a message for the fun... Hello, World? 🌍👀")
 
     if st.button(f'Test {selected_protocol}'):
         response_time = test_protocol(df1['endpoint'].iloc[0], user_message=user_message)
