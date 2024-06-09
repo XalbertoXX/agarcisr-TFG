@@ -1,10 +1,8 @@
 from flask import Flask, request, jsonify
 from cryptography.hazmat.primitives import hashes, serialization
-from cryptography.hazmat.primitives.kdf.hkdf import HKDF
-from cryptography.hazmat.primitives.asymmetric import dh, rsa, padding
+from cryptography.hazmat.primitives.asymmetric import padding
 from cryptography.hazmat.backends import default_backend
 import numpy as np
-
 
 app = Flask(__name__)
 
@@ -62,46 +60,59 @@ def encrypt():
         'used_public_key': public_key_data.hex()
     })
 
-# Securely generate ternary noise
-def generate_ternary_noise(size):
-    return np.random.choice([-1, 0, 1], size=size)
+# Swoosh functions (to be implemented differently in the final version)
+def swoosh_generate_parameters():
+    return {'q': 2**14, 'd': 256, 'N': 32}
 
-# RSA Decryption
+def swoosh_generate_keys(parameters):
+    q, d, N = parameters['q'], parameters['d'], parameters['N']
+    A = np.random.randint(0, q, size=(N, N))
+    s = np.random.randint(-1, 2, size=N)
+    e = np.random.randint(-1, 2, size=N)
+    public_key = (np.dot(A, s) + e) % q
+    return s, public_key
+
+def swoosh_serialize_public_key(public_key):
+    return public_key.tobytes()
+
+def swoosh_deserialize_public_key(serialized_public_key):
+    return np.frombuffer(serialized_public_key, dtype=int)
+
+def swoosh_derive_shared_key(private_key, public_key):
+    q = 2**14
+    shared_key = (np.dot(private_key, public_key)) % q
+    return shared_key.tobytes()
+
+def swoosh_serialize_private_key(private_key):
+    return private_key.tobytes()
+
+# Swoosh NIKE receive public key and generate response
 @app.route('/swoosh_receive', methods=['POST'])
-def swoosh_receive():
-    data = request.get_json()
-    pk1 = np.array(data['public_key'])
-    q = data['modulus']
-    A = np.array(data['matrix_A'])
+def swoosh_receive_public_key():
+    try:
+        serialized_public_key_from_server1 = request.data
+        public_key_from_server1 = swoosh_deserialize_public_key(serialized_public_key_from_server1)
 
-    # Determine the size from the received public key
-    size = len(pk1)
+        # Generate Swoosh keys
+        parameters = swoosh_generate_parameters()
+        private_key, public_key = swoosh_generate_keys(parameters)
+        serialized_server_public_key = swoosh_serialize_public_key(public_key)
 
-    # Generate secret s and error e using secure random generation
-    s2 = generate_ternary_noise(size)
-    e2 = generate_ternary_noise(size)
+        # Derive the shared key
+        shared_key = swoosh_derive_shared_key(private_key, public_key_from_server1)
+        final_key = hashes.Hash(hashes.SHA256(), backend=default_backend())
+        final_key.update(shared_key)
+        final_key = final_key.finalize()
 
-    # Compute public key
-    pk2 = (np.dot(A, s2) + e2) % q
-
-    # Compute shared key
-    shared_key = (np.dot(s2, pk1) + np.dot(e2, e2)) % q
-
-    # Derive final key
-    derived_key = HKDF(
-        algorithm=hashes.SHA256(),
-        length=32,
-        salt=None,
-        info=b'swoosh-key-exchange',
-        backend=default_backend()
-    ).derive(shared_key.tobytes())
-
-    return jsonify({
-        'success': True,
-        'shared_key': derived_key.hex(),
-        'public_key': pk2.tolist(),
-        'secret_key': s2.tolist()
-    })
+        # Return keys and shared secret
+        return jsonify({
+            'success': True,
+            'final_key': final_key.hex(),
+            'server_public_key': serialized_server_public_key.hex(),
+            'server2_private_key': swoosh_serialize_private_key(private_key).hex()
+        })
+    except Exception as e:
+        return jsonify({'success': False, 'error': f'Key exchange failed: {str(e)}'})
 
 if __name__ == '__main__':
     app.run(port=5001, debug=True)

@@ -1,9 +1,9 @@
 from flask import Flask, jsonify, request
 from cryptography.hazmat.primitives import hashes, serialization
-from cryptography.hazmat.primitives.kdf.hkdf import HKDF
 from cryptography.hazmat.primitives.asymmetric import dh, rsa, padding
 from cryptography.hazmat.backends import default_backend
-import requests, secrets, numpy as np
+import requests
+import numpy as np
 
 app = Flask(__name__)
 
@@ -102,72 +102,70 @@ def rsa_route():
     else:
         return jsonify({'success': False, 'error': 'Encryption failed'})
 
-# Generate prime number for Swoosh
-def generate_prime_number(bits):
-    return dh.generate_parameters(generator=2, key_size=bits, backend=default_backend()).p
+# Swoosh functions (to be implemented differently in the final version)
+def swoosh_generate_parameters():
+    return {'q': 2**14, 'd': 256, 'N': 32}
 
-# Generate matrix A for Swoosh (M-LWE based)
-def generate_matrix_A(size, modulus):
-    return np.random.randint(0, modulus, size=(size, size))
+def swoosh_generate_keys(parameters):
+   q,  d, N = parameters['q'], parameters['d'], parameters['N']
+   A = np.random.randint(0, q, size=(N, N))
+   s = np.random.randint(-1, 2, size=N)
+   e = np.random.randint(-1, 2, size=N)
+   public_key = (np.dot(A, s) + e) % q
+   return s, public_key
 
-# Securely generate ternary noise
-def generate_ternary_noise(size):
-    return np.random.choice([-1, 0, 1], size=size)
+def swoosh_serialize_public_key(public_key):
+    return public_key.tobytes()
 
-# Swoosh key exchange
-@app.route('/swoosh', methods=['POST'])
-def swoosh_route():
-    data = request.get_json()
-    message = data['message'].encode()
+def swoosh_deserialize_public_key(serialized_public_key):
+    return np.frombuffer(serialized_public_key, dtype=int)
 
-    # Swoosh parameters
-    q = generate_prime_number(12)  # Generate a 12-bit prime number dynamically
-    d = secrets.randbelow(100) + 150  # Generate dimension dynamically, e.g., between 150 and 250
-    size = secrets.randbelow(16) + 16  # Matrix size between 16 and 32
+def swoosh_derive_shared_key(private_key, public_key):
+    q = 2**14
+    shared_key = (np.dot(private_key, public_key)) % q
+    return shared_key.tobytes()
 
-    # Generate matrix A
-    A = generate_matrix_A(size, q)
+def swoosh_serialize_private_key(private_key):
+    return private_key.tobytes()
 
-    # Generate secret s and error e using secure random generation
-    s1 = generate_ternary_noise(size)
-    e1 = generate_ternary_noise(size)
+# Swoosh NIKE key generation and exchange
+@app.route('/swoosh', methods=['GET'])
+def swoosh_nike_route():
+    try:
+        # Generate Swoosh parameters and keys
+        parameters = swoosh_generate_parameters()
+        private_key, public_key = swoosh_generate_keys(parameters)
 
-    # Compute public key
-    pk1 = (np.dot(s1, A) + e1) % q
+        # Serialize public key and send to Server 2
+        serialized_public_key = swoosh_serialize_public_key(public_key)
+        response = requests.post('http://127.0.0.1:5001/swoosh_receive', data=serialized_public_key)
 
-    # Send public key to Server 2
-    response = requests.post('http://127.0.0.1:5001/swoosh_receive', json={
-        'public_key': pk1.tolist(),
-        'modulus': q,
-        'matrix_A': A.tolist()
-    })
+        if response.status_code == 200:
+            response_data = response.json()
+            if 'server_public_key' in response_data:
+                server_public_key = swoosh_deserialize_public_key(bytes.fromhex(response_data['server_public_key']))
 
-    if response.status_code == 200:
-        response_data = response.json()
-        pk2 = np.array(response_data['public_key'])
-        e2 = generate_ternary_noise(size)
+                # Derive the shared key
+                shared_key = swoosh_derive_shared_key(private_key, server_public_key)
+                final_key = hashes.Hash(hashes.SHA256(), backend=default_backend())
+                final_key.update(shared_key)
+                final_key = final_key.finalize()
 
-        # Compute shared key
-        shared_key = (np.dot(s1, pk2) + np.dot(e1, e2)) % q
+                # Return keys and shared secret
+                return jsonify({
+                    'success': True,
+                    'server1_private_key': swoosh_serialize_private_key(private_key).hex(),
+                    'server1_public_key': serialized_public_key.hex(),
+                    'server2_public_key': response_data['server_public_key'],
+                    'final_key': final_key.hex()
+                })
+            else:
+                return jsonify({'success': False, 'error': 'Server public key not found in response'})
+        else:
+            return jsonify({'success': False, 'error': f'Server 2 responded with status code {response.status_code}'})
+    except Exception as e:
+        return jsonify({'success': False, 'error': f'Error during key exchange: {str(e)}'})
 
-        # Derive final key
-        derived_key = HKDF(
-            algorithm=hashes.SHA256(),
-            length=32,
-            salt=None,
-            info=b'swoosh-key-exchange',
-            backend=default_backend()
-        ).derive(shared_key.tobytes())
-
-        return jsonify({
-            'success': True,
-            'shared_key': derived_key.hex(),
-            'server1_public_key': pk1.tolist(),
-            'server1_secret_key': s1.tolist(),
-            'server2_public_key': pk2.tolist()
-        })
-    else:
-        return jsonify({'success': False, 'error': 'Key exchange failed'})
 
 if __name__ == '__main__':
     app.run(port=5000, debug=True)

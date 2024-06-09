@@ -59,27 +59,26 @@ def test_protocol(endpoint, user_message):
     response_time = None
     try:
         start_time = time.time()
-        if (endpoint == 'rsa' or endpoint == 'swoosh') and user_message:
+        if endpoint == 'rsa' and user_message:
             response = requests.post(f'http://localhost:5000/{endpoint}', json={'message': user_message})
         else:
             response = requests.get(f'http://localhost:5000/{endpoint}')
         end_time = time.time()
         response_time = end_time - start_time
-
-        if response.status_code == 200:
-           # To be dealt with for each protocol response_data = response.json()
+        st.write(response.json())
+        if response.status_code == 200 and response.json().get('success', True):
             if not simulate:
                 # Save response data
                 save_test_results(selected_protocol, response_time)
+                return response_time
         else:
             if not simulate:
                 st.error(f"Failed to test {endpoint}: Server responded with status code {response.status_code}")
+                return None
     except requests.RequestException as e:
         if not simulate:
             st.error(f"Failed to test {endpoint}: {e}")
-
-    return response_time
-
+            return None
 
 # Perform query.
 df = conn.query('SELECT * FROM protocols;', ttl="10m")
@@ -88,7 +87,7 @@ df = conn.query('SELECT * FROM protocols;', ttl="10m")
 protocol_list = df['name'].tolist()
 
 # Sidebar
-st.sidebar.title("Protocol List 🌌")
+st.sidebar.title("PROTOCOL LIST 🌌")
 selected_protocol = st.sidebar.selectbox("Select Protocol", list(protocol_list))
 
 # Perform query to get the protocol data of the selected protocol
@@ -108,13 +107,13 @@ tab1, tab2 = st.tabs(["Test Protocols", "Compare Protocols"])
 # Tab 1: Test Protocols
 with tab1:
     user_message = ""
-    if selected_protocol == 'RSA 📜' or selected_protocol == 'Swoosh ⚡':
+    if selected_protocol == 'RSA 📜':
         user_message = st.text_area("Enter a message for the fun... Hello, World? 🌍👀")
 
     if st.button(f'Test {selected_protocol}'):
         response_time = test_protocol(df1['endpoint'].iloc[0], user_message=user_message)
 
-        if response_time:
+        if response_time is not None:
             st.success(f"Response Time: {response_time:.3f} seconds")
 
             st.write(f"The protocol {selected_protocol} was tested successfully! 🎉 \n\n"
@@ -132,3 +131,13 @@ with tab2:
         comparison_data = {protocol: pd.Series(load_test_results(protocol), dtype=float) for protocol in comparison_protocols}
         comparison_df = pd.DataFrame(comparison_data)
         plot_interactive_chart(comparison_df)
+        st.write("The chart above shows the performance of the selected protocols over time. In general, the lower the response time, the better the performance of the protocol, but there are more thigns to take into consideration\n\n"
+                 "The chart is interactive, so you can zoom in, zoom out, and hover over the data points to see the exact response time for each protocol. This is the main metric to determine the performance of the protocols, although not the only one as we will see scrolling down. \n ",
+                 "It is also updated in real-time as new tests are performed, so you can keep an eye on the performance of the protocols as you test them 📊 while also seeing in real time which protocol is the best given the selected above, and while different. it could help visualice each of them in an easy and clicky way.")
+        # Calculate the average response time for each protocol, the desviations and the best protocol in therms of performance
+        st.write("🔶The average response for each protocol is calculated as the sum of all response times divided by the number of tests performed:")
+        st.write(comparison_df.mean())
+        st.write("🔶The standard deviation for each protocol is a metric that indicates how much the response times vary from the average. Higher deviation values indicate more variability in the response times, which isn't ideal for establishing a protocol that might need to secure many sessions at the same time or encrypt large amounts of data:")
+        st.write(comparison_df.std())
+        st.write("🔶The best protocol in terms of performance is determined by the protocol with the lowest average response time in correlation with the lowest standard deviation:")
+        st.write(f"{comparison_df.mean().idxmin()}, is the best protocol in terms of performance, with an average response time of {comparison_df.mean().min():.3f} seconds and a standard deviation of {comparison_df.std().min():.3f} seconds.")
