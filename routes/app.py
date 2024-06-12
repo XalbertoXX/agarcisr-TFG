@@ -1,11 +1,12 @@
 from flask import Flask, jsonify, request
 from cryptography.hazmat.primitives import hashes, serialization
-from cryptography.hazmat.primitives.asymmetric import dh, rsa, padding
+from cryptography.hazmat.primitives.asymmetric import ec, dh, rsa, padding
 from cryptography.hazmat.backends import default_backend
 import requests
 import numpy as np
 
 app = Flask(__name__)
+
 
 # Diffie-Hellman key exchange
 @app.route('/diffie_hellman', methods=['GET'])
@@ -55,6 +56,56 @@ def diffie_hellman_route():
             return jsonify({'success': False, 'error': 'Server public key not found in response'})
     else:
         return jsonify({'success': False, 'error': f'Server 2 responded with status code {response.status_code}'})
+    
+    
+# Elliptic curve Diffie-Hellman key exchange
+@app.route('/ecdh', methods=['GET'])
+def ecdh_route():
+    try:
+        # Generate ECDH private and public keys
+        private_key = ec.generate_private_key(ec.SECP256R1(), default_backend())
+        public_key = private_key.public_key()
+
+        # Serialize public key and send to Server 2
+        serialized_public_key = public_key.public_bytes(
+            encoding=serialization.Encoding.DER,
+            format=serialization.PublicFormat.SubjectPublicKeyInfo
+        )
+        response = requests.post('http://127.0.0.1:5001/receive_public_key_ell_curve', data=serialized_public_key)
+
+        if response.status_code == 200:
+            response_data = response.json()
+            if 'server_public_key' in response_data:
+                server_public_key = serialization.load_der_public_key(
+                    bytes.fromhex(response_data['server_public_key']),
+                    backend=default_backend()
+                )
+
+                # Derive the shared key
+                shared_key = private_key.exchange(ec.ECDH(), server_public_key)
+                final_key = hashes.Hash(hashes.SHA256(), backend=default_backend())
+                final_key.update(shared_key)
+                final_key = final_key.finalize()
+
+                # Return private key and public keys
+                return jsonify({
+                    'success': True,
+                    'server1_private_key': private_key.private_bytes(
+                        encoding=serialization.Encoding.PEM,
+                        format=serialization.PrivateFormat.PKCS8,
+                        encryption_algorithm=serialization.NoEncryption()
+                    ).hex(),
+                    'server1_public_key': serialized_public_key.hex(),
+                    'server2_public_key': response_data['server_public_key'],
+                    'final_key': final_key.hex()
+                })
+            else:
+                return jsonify({'success': False, 'error': 'Server public key not found in response'})
+        else:
+            return jsonify({'success': False, 'error': f'Server 2 responded with status code {response.status_code}'})
+    except Exception as e:
+        return jsonify({'success': False, 'error': f'Error during key exchange: {str(e)}'})
+
 
 # RSA encryption
 @app.route('/rsa', methods=['POST'])
@@ -101,6 +152,7 @@ def rsa_route():
         })
     else:
         return jsonify({'success': False, 'error': 'Encryption failed'})
+
 
 # Swoosh functions (to be implemented differently in the final version)
 def swoosh_generate_parameters():
