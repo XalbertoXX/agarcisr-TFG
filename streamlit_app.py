@@ -1,8 +1,9 @@
 import streamlit as st
-import requests, time
 import pandas as pd
 import plotly.express as px
-from sqlalchemy import text 
+import requests, time
+from sqlalchemy import text
+
 
 # Set the page title and favicon
 st.set_page_config(page_title="Protocol Performance Test", page_icon="🚀")
@@ -80,7 +81,6 @@ def test_protocol(endpoint, user_message):
             st.error(f"Failed to test {endpoint}: {e}")
             return None
 
-# Perform query.
 df = conn.query('SELECT * FROM protocols;', ttl="10m")
 
 # Frontend main title, sidebar and tabs definition
@@ -90,13 +90,13 @@ protocol_list = df['name'].tolist()
 st.sidebar.title("PROTOCOL LIST 🌌")
 selected_protocol = st.sidebar.selectbox("Select Protocol", list(protocol_list))
 
-# Perform query to get the protocol data of the selected protocol
+# Query to get the protocol data of the selected protocol
 df1 = conn.query(f""" SELECT * FROM protocols WHERE name = '{selected_protocol}';""", ttl="10m")
 
 # Protocol Description
 st.sidebar.info(df1['description'].iloc[0])
 
-# Enhanced Sidebar for Protocol Information
+# Sidebar for Protocol Information
 with st.sidebar:
     st.title("Protocol Details 🧐")
     st.write(df1['description_long'].iloc[0])
@@ -134,7 +134,7 @@ with tab2:
         st.write("The chart above shows the performance of the selected protocols over time. In general, the lower the response time, the better the performance of the protocol, but there are more thigns to take into consideration\n\n"
                  "The chart is interactive, so you can zoom in, zoom out, and hover over the data points to see the exact response time for each protocol. This is the main metric to determine the performance of the protocols, although not the only one as we will see scrolling down. \n ",
                  "It is also updated in real-time as new tests are performed, so you can keep an eye on the performance of the protocols as you test them 📊 while also seeing in real time which protocol is the best given the selected above, and while different. it could help visualice each of them in an easy and clicky way.")
-        # Calculate the average response time for each protocol, the desviations and the best protocol in therms of performance
+        # Calculation of the average response time for each protocol, the desviations and the best protocol in therms of performance
         st.write("🔶The average response for each protocol is calculated as the sum of all response times divided by the number of tests performed:")
         st.write(comparison_df.mean())
         st.write("🔶The standard deviation for each protocol is a metric that indicates how much the response times vary from the average. Higher deviation values indicate more variability in the response times, which isn't ideal for establishing a protocol that might need to secure many sessions at the same time or encrypt large amounts of data:")
