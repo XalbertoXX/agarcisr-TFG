@@ -1,0 +1,20 @@
+[package]
+name = "shadowCrypt"
+version = "0.1.0"
+edition = "2021"
+
+[lib]
+name = "shadow_crypt"
+crate-type = ["cdylib"]
+
+[profile.dev.package.num-bigint-dig]
+opt-level = 3
+
+[dependencies]
+pyo3 = { version = "0.21.2", features = ["extension-module"] }
+x25519-dalek = { version = "2.0.1", features = ["static_secrets"] }
+num-bigint = { version = "0.4.5", features = ["rand"] }
+rand = "0.8.5"
+rand_core = "0.6.4"
+rsa = "0.9.6"
+kyberlib = "0.0.6"
