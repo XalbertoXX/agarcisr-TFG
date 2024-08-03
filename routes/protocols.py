@@ -8,13 +8,10 @@ app = Flask(__name__)
 @app.route('/receive_public_key', methods=['POST'])
 def receive_public_key():
     try:
-        # To be changed in next commits, just testing
-        p = "85859950916484676125439334608092681304789214056884991689423104627417791485869"  # Example prime
-        g = "2"   # Example generator
         public_key_from_server1 = request.data.decode()
         
-        private_key, public_key = shadow_crypt.generate_dh_key(p, g)
-        shared_key = shadow_crypt.derive_dh_shared_key(private_key, public_key_from_server1, p)
+        private_key, public_key = shadow_crypt.generate_dh_key()
+        shared_key = shadow_crypt.derive_dh_shared_key(private_key, public_key_from_server1)
         final_key = hashlib.sha256(shared_key.encode()).digest()
 
         return jsonify({

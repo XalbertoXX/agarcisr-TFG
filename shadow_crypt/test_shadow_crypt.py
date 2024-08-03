@@ -1,16 +1,29 @@
 import shadow_crypt
 
 # Test Diffie-Hellman key generation
-p = "23"
-g = "5"
-private_key, public_key = shadow_crypt.generate_dh_key(p, g)
-print(f"DH Private Key: {private_key}")
-print(f"DH Public Key: {public_key}")
+private_key1, public_key1 = shadow_crypt.generate_dh_key()
+print(f"DH Private Key 1: {private_key1}")
+print(f"DH Public Key 1: {public_key1}")
+
+private_key2, public_key2 = shadow_crypt.generate_dh_key()
+print(f"DH Private Key 2: {private_key2}")
+print(f"DH Public Key 2: {public_key2}")
 
 # Test deriving shared key
-server_public_key = public_key  # Assuming server public key is the same for the test
-shared_key = shadow_crypt.derive_dh_shared_key(private_key, server_public_key, p)
-print(f"DH Shared Key: {shared_key}")
+shared_key1 = shadow_crypt.derive_dh_shared_key(private_key1, public_key2)
+shared_key2 = shadow_crypt.derive_dh_shared_key(private_key2, public_key1)
+
+print(f"DH Shared Key 1: {shared_key1}")
+print(f"DH Shared Key 2: {shared_key2}")
+
+# Verify that both parties derive the same shared key
+assert shared_key1 == shared_key2, "Diffie-Hellman shared keys do not match!"
+print("Diffie-Hellman shared keys match!")
+
+# Print lengths to verify key sizes
+print(f"Private key length: {len(private_key1)} bytes")
+print(f"Public key length: {len(public_key1)} bytes")
+print(f"Shared key length: {len(shared_key1)} bytes")
 
 # Test ECDH key generation
 ecdh_private_key, ecdh_public_key = shadow_crypt.generate_ecdh_key()

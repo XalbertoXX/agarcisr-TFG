@@ -8,17 +8,15 @@ app = Flask(__name__)
 # Diffie-Hellman key exchange
 @app.route('/diffie_hellman', methods=['GET'])
 def diffie_hellman_route():
-    # To be changed in next commits, just testing
-    p = "85859950916484676125439334608092681304789214056884991689423104627417791485869"  # Example prime
-    g = "2"   # Example generator
-    private_key, public_key = shadow_crypt.generate_dh_key(p, g)
+
+    private_key, public_key = shadow_crypt.generate_dh_key()
     response = requests.post('http://127.0.0.1:5001/receive_public_key', data=public_key)
 
     if response.status_code == 200:
         response_data = response.json()
         if 'server_public_key' in response_data:
             server_public_key = response_data['server_public_key']
-            shared_key = shadow_crypt.derive_dh_shared_key(private_key, server_public_key, p)
+            shared_key = shadow_crypt.derive_dh_shared_key(private_key, server_public_key)
             final_key = hashlib.sha256(shared_key.encode()).digest()
 
             return jsonify({
