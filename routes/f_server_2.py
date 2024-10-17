@@ -56,26 +56,6 @@ def encrypt():
         'used_public_key': public_key
     })
 
-# Swoosh NIKE receive public key and generate response
-@app.route('/swoosh_receive', methods=['POST'])
-def swoosh_receive_public_key():
-    try:
-        public_key_from_server1 = bytes.fromhex(request.data.decode('utf-8'))
-        
-        parameters = (2**14, 256, 32)
-        private_key, public_key = shadow_crypt.swoosh_generate_keys(parameters)
-        shared_key = shadow_crypt.swoosh_derive_shared_key(private_key, public_key_from_server1, parameters[0])
-        final_key = hashlib.sha256(bytes(shared_key)).digest()
-
-        return jsonify({
-            'success': True,
-            'final_key': final_key.hex(),
-            'server_public_key': public_key.hex(),
-            'server2_private_key': private_key.hex()
-        })
-    except Exception as e:
-        return jsonify({'success': False, 'error': f'Key exchange failed: {str(e)}'})
-
 # Crystals Kyber encapsulation
 @app.route('/kyber_encapsulate', methods=['POST'])
 def kyber_encapsulate():
@@ -91,6 +71,25 @@ def kyber_encapsulate():
         })
     except Exception as e:
         return jsonify({'success': False, 'error': f'Kyber encapsulation failed: {str(e)}'})
+
+# NTRU Encapsulation
+@app.route('/ntru_encapsulate', methods=['POST'])
+def ntru_encapsulate():
+    try:
+        # Get the public key from Server 1
+        public_key = bytes.fromhex(request.data.decode())
+        
+        # Encapsulate to generate ciphertext and shared secret
+        ciphertext, shared_secret = shadow_crypt.ntru_encapsulate(public_key)
+
+        return jsonify({
+            'success': True,
+            'ciphertext': ciphertext.hex(),
+            'shared_secret': shared_secret.hex()
+        })
+    except Exception as e:
+        return jsonify({'success': False, 'error': f'NTRU encapsulation failed: {str(e)}'})
+
 
 if __name__ == '__main__':
     app.run(port=5001, debug=True)

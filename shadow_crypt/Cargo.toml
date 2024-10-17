@@ -13,8 +13,12 @@ opt-level = 3
 [dependencies]
 pyo3 = { version = "0.21.2", features = ["extension-module"] }
 x25519-dalek = { version = "2.0.1", features = ["static_secrets"] }
-num-bigint = { version = "0.4.5", features = ["rand"] }
+num-bigint = { version = "0.4.6", features = ["rand"] }
 rand = "0.8.5"
 rand_core = "0.6.4"
 rsa = "0.9.6"
 kyberlib = "0.0.6"
+ntrust-native = "1.0.1"
+sha2 = "0.10.6"
+sha3 = "0.10.8"
+sidh = "0.2.3"

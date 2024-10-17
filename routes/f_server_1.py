@@ -81,33 +81,6 @@ def rsa_route():
     else:
         return jsonify({'success': False, 'error': 'Encryption failed'})
 
-# Swoosh NIKE key generation and exchange
-@app.route('/swoosh', methods=['GET'])
-def swoosh_nike_route():
-    parameters = (2**14, 256, 32)
-    private_key, public_key = shadow_crypt.swoosh_generate_keys(parameters)
-    serialized_public_key = public_key.hex()
-    response = requests.post('http://127.0.0.1:5001/swoosh_receive', data=serialized_public_key)
-
-    if response.status_code == 200:
-        response_data = response.json()
-        if 'server_public_key' in response_data:
-            server_public_key = bytes.fromhex(response_data['server_public_key'])
-            shared_key = shadow_crypt.swoosh_derive_shared_key(private_key, server_public_key, parameters[0])
-            final_key = hashlib.sha256(bytes(shared_key)).digest()
-
-            return jsonify({
-                'success': True,
-                'server1_private_key': private_key.hex(),
-                'server1_public_key': serialized_public_key,
-                'server2_public_key': response_data['server_public_key'],
-                'final_key': final_key.hex()
-            })
-        else:
-            return jsonify({'success': False, 'error': 'Server public key not found in response'})
-    else:
-        return jsonify({'success': False, 'error': f'Server 2 responded with status code {response.status_code}'})
-
 # Crystals Kyber key encapsulation
 @app.route('/kyber', methods=['GET'])
 def kyber_route():
@@ -131,6 +104,39 @@ def kyber_route():
             return jsonify({'success': False, 'error': 'Ciphertext not found in response'})
     else:
         return jsonify({'success': False, 'error': f'Server 2 responded with status code {response.status_code}'})
+
+# NTRU Key Encapsulation Mechanism
+@app.route('/ntru', methods=['GET'])
+def ntru_route():
+    # Generate NTRU key pair
+    public_key, secret_key = shadow_crypt.ntru_generate_keypair()
+    
+    # Send public key to Server 2 for encapsulation
+    response = requests.post('http://127.0.0.1:5001/ntru_encapsulate', data=public_key)
+
+    if response.status_code == 200:
+        response_data = response.json()
+        
+        if 'ciphertext' in response_data:
+            ciphertext = bytes.fromhex(response_data['ciphertext'])
+            
+            # Decapsulate using the private key to retrieve the shared secret
+            shared_secret = shadow_crypt.ntru_decapsulate(secret_key, ciphertext)
+            final_key = hashlib.sha256(shared_secret).digest()
+
+            return jsonify({
+                'success': True,
+                'server1_public_key': public_key.hex(),
+                'server1_private_key': secret_key.hex(),
+                'server2_ciphertext': response_data['ciphertext'],
+                'shared_secret': shared_secret.hex(),
+                'final_key': final_key.hex()
+            })
+        else:
+            return jsonify({'success': False, 'error': 'Ciphertext not found in response'})
+    else:
+        return jsonify({'success': False, 'error': f'Server 2 responded with status code {response.status_code}'})
+
 
 if __name__ == '__main__':
     app.run(port=5000, debug=True)
