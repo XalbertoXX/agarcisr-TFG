@@ -6,7 +6,6 @@ mod ecdh;
 mod rsa;
 mod kyber;
 mod ntru;
-mod sidh;
 
 use dh::{generate_dh_key, derive_dh_shared_key};
 use ecdh::{generate_ecdh_key, derive_ecdh_shared_key};
@@ -30,8 +29,5 @@ fn shadow_crypt(m: &Bound<'_, PyModule>) -> PyResult<()> {
     m.add_function(wrap_pyfunction!(ntru_generate_keypair, m)?)?;
     m.add_function(wrap_pyfunction!(ntru_encapsulate, m)?)?;
     m.add_function(wrap_pyfunction!(ntru_decapsulate, m)?)?;
-    m.add_function(wrap_pyfunction!(sidh::sidh_keygen, m)?)?;
-    m.add_function(wrap_pyfunction!(sidh::sidh_encapsulate, m)?)?;
-    m.add_function(wrap_pyfunction!(sidh::sidh_decapsulate, m)?)?;
     Ok(())
 }
