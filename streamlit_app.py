@@ -199,4 +199,12 @@ with tab3:
         st.write("🔶The standard deviation for each protocol is a metric that indicates how much the response times vary from the average. Higher deviation values indicate more variability in the response times, which isn't ideal for establishing a protocol that might need to secure many sessions at the same time or encrypt large amounts of data:")
         st.write(comparison_df.std())
         st.write("🔶The best protocol in terms of performance is determined by the protocol with the lowest average response time in correlation with the lowest standard deviation:")
-        st.write(f"{comparison_df.mean().idxmin()}, is the best protocol in terms of performance, with an average response time of {comparison_df.mean().min():.3f} seconds and a standard deviation of {comparison_df.std().min():.3f} seconds.")
+        avg_series = comparison_df.mean().dropna()
+        std_series = comparison_df.std().dropna()
+        if avg_series.empty:
+            st.write("No valid data available to determine the best protocol.")
+        else:
+            best_protocol = avg_series.idxmin()
+            best_avg = avg_series.loc[best_protocol]
+            best_std = std_series.get(best_protocol, float('nan'))
+            st.write(f"{best_protocol}, is the best protocol in terms of performance, with an average response time of {best_avg:.3f} seconds and a standard deviation of {best_std:.3f} seconds.")

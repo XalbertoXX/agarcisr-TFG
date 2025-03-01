@@ -948,7 +948,7 @@ dependencies = [
 ]
 
 [[package]]
-name = "shadowCrypt"
+name = "shadow_crypt"
 version = "0.1.0"
 dependencies = [
  "kyberlib",
