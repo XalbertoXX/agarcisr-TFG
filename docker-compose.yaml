@@ -1,0 +1,16 @@
+services:
+  server1:
+    build: ./service/server1
+    ports:
+      - "5000:5000"
+    depends_on:
+      - server2
+    environment:
+      - FLASK_ENV=development
+
+  server2:
+    build: ./service/server2
+    ports:
+      - "5001:5001"
+    environment:
+      - FLASK_ENV=development

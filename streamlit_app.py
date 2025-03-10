@@ -16,7 +16,7 @@ conn = st.session_state.conn
 
 # Save test results to the protocol_performance table
 def save_test_results(protocol_name, time_seconds):
-    # First, get the protocol endpoint from the protocols table using the protocol name.
+    # Get the protocol endpoint from the protocols table using the protocol name.
     res = conn.table("protocols").select("endpoint").eq("name", protocol_name).execute()
     if res.data and len(res.data) > 0:
         endpoint_value = res.data[0]['endpoint']
@@ -24,14 +24,17 @@ def save_test_results(protocol_name, time_seconds):
         insert_res = conn.table("protocol_performance").insert({
             "protocol_name": endpoint_value,
             "time_seconds": time_seconds
-            # Assuming the created_at column in your table defaults to CURRENT_TIMESTAMP.
         }).execute()
-        if insert_res.error:
-            st.error(f"Error saving test results: {insert_res.error.message}")
+        # Convert the Pydantic model to a dict so we can use .get()
+        insert_res_dict = insert_res.dict()
+        if insert_res_dict.get("error"):
+            st.error(f"Error saving test results: {insert_res_dict['error'].message}")
         else:
             st.success("Test results saved successfully.")
     else:
         st.error("Protocol endpoint not found.")
+
+
 
 # Load test results from protocol_performance for a given protocol
 def load_test_results(protocol_name):
@@ -167,11 +170,11 @@ with tab2:
     user_message = ""
     # For RSA, allow entering a message.
     if selected_protocol.lower().startswith('rsa'):
-        user_message = st.text_area("Enter a message for the fun... Hello, World? 🌍👀")
+        user_message = st.text_area("Enter a message for the fun...", value="Hello, World!", placeholder="Hello, World!")
     if st.button(f'Test {selected_protocol}'):
         if not protocol_details_df.empty:
             endpoint = protocol_details_df['endpoint'].iloc[0]
-            response_time = test_protocol(endpoint, user_message=user_message)
+            response_time = test_protocol(endpoint, user_message)
             if response_time is not None:
                 st.success(f"Response Time: {response_time:.3f} seconds")
                 st.write(f"The protocol {selected_protocol} was tested successfully! 🎉\n\n"
