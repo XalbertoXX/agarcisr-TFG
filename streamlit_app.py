@@ -35,7 +35,6 @@ def save_test_results(protocol_name, time_seconds):
         st.error("Protocol endpoint not found.")
 
 
-
 # Load test results from protocol_performance for a given protocol
 def load_test_results(protocol_name):
     # First, retrieve the endpoint for the protocol from the protocols table.
@@ -61,7 +60,7 @@ def plot_interactive_chart(data_frame):
     if not data_frame.empty:
         fig = px.line(data_frame, title="Protocol Performance Over Time 📈")
         fig.update_xaxes(title_text='Test Iterations')
-        fig.update_yaxes(title_text='Response Time (seconds)')
+        fig.update_yaxes(title_text='Response Time (seconds)', tickformat=".6f")
         st.plotly_chart(fig)
     else:
         st.write("Ooops...\n\nThere is no data available to plot, sorry 😢")
@@ -69,7 +68,6 @@ def plot_interactive_chart(data_frame):
 # Test the protocol
 def test_protocol(endpoint, user_message):
     simulate = False
-    response_time = None
     try:
         start_time = time.time()
         if endpoint == 'rsa' and user_message:
@@ -78,12 +76,15 @@ def test_protocol(endpoint, user_message):
             response = requests.get(f'http://localhost:5000/{endpoint}')
         end_time = time.time()
         response_time = end_time - start_time
-        st.write(response.json())
-        if response.status_code == 200 and response.json().get('success', True):
+        
+        response_json = response.json()
+        st.write(response_json)
+        
+        if response.status_code == 200 and response_json.get('success', True):
             if not simulate:
                 # Save response data
                 save_test_results(selected_protocol, response_time)
-                return response_time
+                return response_time, response_json
         else:
             if not simulate:
                 st.error(f"Failed to test {endpoint}: Server responded with status code {response.status_code}")
@@ -174,15 +175,23 @@ with tab2:
     if st.button(f'Test {selected_protocol}'):
         if not protocol_details_df.empty:
             endpoint = protocol_details_df['endpoint'].iloc[0]
-            response_time = test_protocol(endpoint, user_message)
-            if response_time is not None:
+            result = test_protocol(endpoint, user_message)
+            if result is not None:
+                response_time, response_json = result
                 st.success(f"Response Time: {response_time:.3f} seconds")
                 st.write(f"The protocol {selected_protocol} was tested successfully! 🎉\n\n"
-                         "During this time the program sent a request to the server, "
-                         "and the server processed the request and sent a response back. "
-                         "The time it took for the server to respond is the response time.")
+                        "During this time the program sent a request to the server, "
+                        "and the server processed the request and sent a response back. ")
+                
+                # Retrieve the explanation template from the protocols table.
+                explanation_template = protocol_details_df['protocol_explanation'].iloc[0]
+                explanation = explanation_template.format(**response_json)
+                formatted_explanation = f'<div style="max-width:800px; margin: 0 auto; text-align:left;">{explanation}</div>'
+                st.markdown(formatted_explanation, unsafe_allow_html=True)
                 st.write("The lower the response time, the better the performance of the protocol. 🚀\n"
-                         "For more information, check the interactive chart on the 'Compare Protocols' tab. 📈\n\nTchau! 👋🏽")
+                "For more information, check the interactive chart on the 'Compare Protocols' tab. 📈\n\nTchau! 👋🏽")
+            else:
+                st.error("Test did not complete successfully.")
         else:
             st.error("Protocol details not found.")
             
