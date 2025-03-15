@@ -12,7 +12,7 @@ def show_compare_protocols(conn, protocol_list):
         plot_interactive_chart(comparison_df)
         st.write("The chart above shows the performance of the selected protocols over time. In general, the lower the response time, the better the performance of the protocol, but there are more thigns to take into consideration\n\n"
                  "The chart is interactive, so you can zoom in, zoom out, and hover over the data points to see the exact response time for each protocol. This is the main metric to determine the performance of the protocols, although not the only one as we will see scrolling down. \n ",
-                 "It is also updated in real-time as new tests are performed, so you can keep an eye on the performance of the protocols as you test them 📊 while also seeing in real time which protocol is the best given the selected above, and while different. it could help visualice each of them in an easy and clicky way.")
+                 "It is also updated in real-time as new tests are performed, so you can keep an eye on the performance of the protocols as you test them 📊 while also seeing in real time which protocol is the best given the selected above, and while different. It could help visualice each one of them in an easy and clicky way.")
         # Calculation of the average response time for each protocol, the desviations and the best protocol in therms of performance
         st.write("🔶The average response for each protocol is calculated as the sum of all response times divided by the number of tests performed:")
         st.write(comparison_df.mean())

@@ -3,6 +3,7 @@ from utils.database import get_connection, get_protocols, get_protocol_details
 from tabs.overview import show_overview
 from tabs.test_protocols import show_test_protocols
 from tabs.compare_protocols import show_compare_protocols
+from tabs.ask_ai import show_ai
 
 # Title
 st.set_page_config(page_title="Protocol Performance Test", page_icon="🚀")
@@ -30,21 +31,23 @@ else:
 
 # ---------------------------
 # Sidebar: Protocol Selection & Details
-
-st.sidebar.title("PROTOCOL LIST 🏃🏻‍♂️‍➡️")
-selected_protocol = st.sidebar.selectbox("Select Protocol", protocol_list)
-
-# Obtain the details for the selected protocol
-protocol_details_df = get_protocol_details(conn, selected_protocol)
-
 with st.sidebar:
+    st.markdown("# PROTOCOLS LIST 🔭")
+    selected_protocol = st.sidebar.selectbox("Select Protocol", protocol_list)
+
+    # Obtain the details for the selected protocol
+    protocol_details_df = get_protocol_details(conn, selected_protocol)
+
     st.title("Protocol Details 🧐")
     if not protocol_details_df.empty:
         st.sidebar.info(protocol_details_df['description'].iloc[0])
-        st.sidebar.write("### Protocol Details")
         st.sidebar.write(protocol_details_df['description_long'].iloc[0])
     else:
         st.sidebar.warning("No protocol has been found :/ 404")
+
+    st.sidebar.markdown("---") 
+    # AI Chat Widget
+    show_ai()  
 
 # Tabs
 tab1, tab2, tab3 = st.tabs(["Overview", "Test Protocols", "Compare Protocols"])
