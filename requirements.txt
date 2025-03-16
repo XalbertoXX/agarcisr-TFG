@@ -1,0 +1,7 @@
+# requirements.txt
+streamlit
+supabase
+st-supabase-connection
+pandas
+plotly
+google-generativeai
