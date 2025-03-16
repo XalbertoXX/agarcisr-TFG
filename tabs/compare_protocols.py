@@ -25,7 +25,7 @@ def show_compare_protocols(conn, protocol_list):
             protocol: pd.Series(data["encryption_overhead"]) for protocol, data in comparison_data.items()
         })
 
-         # Original response time chart
+         # Response time chart
         st.write("## Performance Over Time 📈")
         plot_interactive_chart(response_df)
         st.write("The chart above shows the performance of the selected protocols over time. In general, the lower the response time, the better the performance of the protocol, but there are more thigns to take into consideration\n\n"
