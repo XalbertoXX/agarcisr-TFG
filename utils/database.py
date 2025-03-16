@@ -19,13 +19,15 @@ def get_protocol_details(conn, protocol_name):
     return pd.DataFrame(protocol_details_res.data) if protocol_details_res.data else pd.DataFrame()
 
 # Save test results of test conducted into DB
-def save_test_results(conn, protocol_name, time_seconds):
+def save_test_results(conn, protocol_name, time_seconds, bandwidth, encryption_overhead):
     res = conn.table("protocols").select("endpoint").eq("name", protocol_name).execute()
     if res.data and len(res.data) > 0:
         endpoint_value = res.data[0]['endpoint']
         insert_res = conn.table("protocol_performance").insert({
             "protocol_name": endpoint_value,
-            "time_seconds": time_seconds
+            "time_seconds": time_seconds,
+            "bandwidth": bandwidth,
+            "encryption_overhead": encryption_overhead
         }).execute()
         insert_res_dict = insert_res.model_dump()
         if insert_res_dict.get("error"):
@@ -41,14 +43,11 @@ def load_test_results(conn, protocol_name):
     if res.data and len(res.data) > 0:
         endpoint_value = res.data[0]['endpoint']
         results = conn.table("protocol_performance") \
-                      .select("time_seconds") \
-                      .eq("protocol_name", endpoint_value) \
-                      .order("created_at") \
-                      .execute()
-        if results.data:
-            return [record["time_seconds"] for record in results.data]
-        else:
-            return []
+                     .select("time_seconds", "bandwidth", "encryption_overhead") \
+                     .eq("protocol_name", endpoint_value) \
+                     .order("created_at") \
+                     .execute()
+        return results.data if results.data else []
     else:
         st.error("Protocol endpoint not found for loading test results.")
         return []
