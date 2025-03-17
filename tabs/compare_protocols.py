@@ -53,7 +53,7 @@ def show_compare_protocols(conn, protocol_list):
 
         # Standard Deviation
         st.write("### Standard Deviation")
-        st.write("🔶 The standard deviation for each protocol is a metric that indicates how much the response times vary from the average. "
+        st.write("🔶 The standard deviation for each protocol is a metric that indicates how much the response times vary from the average."
         "Higher deviation values indicate more variability in the response times, which isn't ideal for establishing a protocol that might need to secure many sessions at the same time or encrypt large amounts of data:")
         st.write(response_df.std())
         

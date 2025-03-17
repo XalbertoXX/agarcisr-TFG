@@ -1,7 +1,7 @@
 import plotly.express as px
 import streamlit as st
 
-# Interactive chart showcase
+# Interactive chart display
 def plot_interactive_chart(data_frame):
     if not data_frame.empty:
         fig = px.line(data_frame, title="Protocol Performance Over Time 📈")
