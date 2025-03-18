@@ -17,10 +17,10 @@ WORKDIR /app
 COPY . /app
 
 # 5. Install Python dependencies
-RUN pip install --no-cache-dir -r requirements.txt
+RUN pip install --no-cache-dir -r requirements.txt gunicorn
 
 # 6. Expose port 5001
 EXPOSE 5001
 
 # 7. Run your Flask server
-CMD ["python", "f_server_2.py"]
+CMD ["gunicorn", "--bind", "0.0.0.0:5001", "f_server_2:app"]
