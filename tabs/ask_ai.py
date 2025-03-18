@@ -8,6 +8,7 @@ genai.configure(api_key=st.secrets["GOOGLE_API_KEY"])
 def ask_ai(question):
     try:
         model = genai.GenerativeModel('gemini-1.5-flash')
+        
         # Create response
         response = model.generate_content(question)
         return response.text
@@ -16,6 +17,7 @@ def ask_ai(question):
 
 def show_ai():
     st.markdown("## Ask the AI 🤖")
+
     # Input box for questions
     user_question = st.text_area("Write your prompt here:", placeholder="What is RSA encryption in depth?")
 

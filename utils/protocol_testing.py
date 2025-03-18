@@ -3,35 +3,38 @@ import time
 import json
 import streamlit as st
 
+# Function to call service side of the app and retrieve the information
 def test_protocol(endpoint, user_message):
     simulate = False
     try:
+
+        BACKEND_URL = st.secrets.get("SERVER1_URL", "http://localhost:5000")
+        
         start_time = time.time()
         
-        # Track request size (for POST requests)
+        # Track request size
         request_size = 0
         if endpoint == 'rsa' and user_message:
-            # For POST requests (e.g., RSA), calculate request size
+            # FPOST requests
             request_body = json.dumps({'message': user_message})
             request_size = len(request_body.encode('utf-8'))
-            response = requests.post(f'http://localhost:5000/{endpoint}', json={'message': user_message})
+            response = requests.post(f"{BACKEND_URL}/{endpoint}", json={'message': user_message})
         else:
-            # For GET requests, assume no request body
-            response = requests.get(f'http://localhost:5000/{endpoint}')
+            # GET requests
+            response = requests.get(f"{BACKEND_URL}/{endpoint}")
         
         end_time = time.time()
         response_time = end_time - start_time
         
-        # Calculate response size
+        # Response size
         response_size = len(response.content)
         
-        # Calculate bandwidth (Mbps)
+        # Bandwidth in Mbps
         bandwidth = (request_size + response_size) * 8 / (response_time * 1e6) if response_time > 0 else 0
         
-        # Calculate encryption overhead (for RSA only)
+        # Encryption overhead
         encryption_overhead = None
         if endpoint == 'rsa' and user_message:
-            # Assume the response includes encrypted data (modify based on your API)
             encrypted_message = response.json().get('encrypted_message', '')
             original_size = len(user_message.encode('utf-8'))
             encrypted_size = len(encrypted_message.encode('utf-8'))
@@ -52,6 +55,7 @@ def test_protocol(endpoint, user_message):
             if not simulate:
                 st.error(f"Failed to test {endpoint}: Server responded with status code {response.status_code}")
                 return None
+            
     except Exception as e:
         if not simulate:
             st.error(f"Failed to test {endpoint}: {e}")

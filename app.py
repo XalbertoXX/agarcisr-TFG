@@ -46,6 +46,7 @@ with st.sidebar:
         st.sidebar.warning("No protocol has been found :/ 404")
 
     st.sidebar.markdown("---") 
+    
     # AI Chat Widget
     show_ai()  
 

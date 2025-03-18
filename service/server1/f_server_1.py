@@ -2,20 +2,26 @@ from flask import Flask, jsonify, request
 import requests
 import hashlib
 import shadow_crypt
+import os
 
 app = Flask(__name__)
 
-# --- Diffie-Hellman Key Exchange ---
+SERVER2_URL = os.environ.get("SERVER2_URL", "http://localhost:5001")
+
+# Health check for Render
+@app.route('/health')
+def health():
+    return jsonify({"status": "ok"}), 200
+
+# Diffie-Hellman
 @app.route('/diffie_hellman', methods=['GET'])
 def diffie_hellman_route():
-    # Generate our DH key pair (keys are lists of ints)
+    # Generate key pair
     private_key1, public_key1 = shadow_crypt.generate_dh_key()
-    
-    # Convert our public key (list of ints) to bytes then to a hex string for transmission
     public_key1_hex = bytes(public_key1).hex()
     
-    # Send our public key as a hex string to Server 2
-    response = requests.post('http://server2:5001/receive_public_key', data=public_key1_hex)
+    # Callout server 2
+    response = requests.post(f"{SERVER2_URL}/receive_public_key", data=public_key1_hex)
     if response.status_code != 200:
         return jsonify({'success': False, 'error': f'Server 2 error: {response.status_code}'}), response.status_code
     
@@ -23,12 +29,10 @@ def diffie_hellman_route():
     if 'server_public_key' not in data:
         return jsonify({'success': False, 'error': 'No public key received from Server 2'}), 500
 
-    # Convert Server 2's public key from hex string back to a list of ints
     server_public_key = list(bytes.fromhex(data['server_public_key']))
     
-    # Compute the shared key using our private key and Server 2's public key
+    # Shared secret computation
     shared_key = shadow_crypt.derive_dh_shared_key(private_key1, server_public_key)
-    # Convert the shared key (list of ints) to bytes, then compute SHA‑256 hash and get its hex digest
     final_key = hashlib.sha256(bytes(shared_key)).hexdigest()
     
     return jsonify({
@@ -39,17 +43,16 @@ def diffie_hellman_route():
         'final_key': final_key
     })
 
-# --- Elliptic Curve Diffie-Hellman Key Exchange ---
+# Elliptic Curve Diffie-Hellman
 @app.route('/ecdh', methods=['GET'])
 def ecdh_route():
     try:
-        # Generate our own ECDH key pair.
+        # Generate our own ECDH key pair
         private_key, public_key = shadow_crypt.generate_ecdh_key()
-        # Convert our public key (list of ints) to bytes then to hex string.
         public_key_hex = bytes(public_key).hex()
         
-        # Send our public key (as hex) to Server 2.
-        response = requests.post('http://server2:5001/receive_public_key_ell_curve', data=public_key_hex)
+        # Callout server 2
+        response = requests.post(f"{SERVER2_URL}/receive_public_key_ell_curve", data=public_key_hex)
         if response.status_code != 200:
             return jsonify({'success': False, 'error': f'Server 2 error: {response.status_code}'}), response.status_code
         
@@ -57,11 +60,11 @@ def ecdh_route():
         if 'server_public_key' not in res_json:
             return jsonify({'success': False, 'error': 'No public key returned by Server 2'}), 500
         
-        # Convert Server 2's public key from hex string to bytes.
+        # Turn public key from hex string to bytes
         server_pub_hex = res_json['server_public_key']
         server_pub_bytes = bytes.fromhex(server_pub_hex)
         
-        # Compute the shared key using our private key and Server 2's public key.
+        # Shared secret computation
         shared_key = shadow_crypt.derive_ecdh_shared_key(private_key, server_pub_bytes)
         final_key = hashlib.sha256(bytes(shared_key)).hexdigest()
         
@@ -75,7 +78,7 @@ def ecdh_route():
     except Exception as e:
         return jsonify({'success': False, 'error': str(e)})
 
-# --- RSA Encryption/Decryption ---
+# RSA
 @app.route('/rsa', methods=['POST'])
 def rsa_route():
     try:
@@ -86,9 +89,9 @@ def rsa_route():
         data = request.get_json()
         message = data.get('message', "Hello, world!")
 
-        # Send the public key and message to Server 2 for encryption.
+        # Send the public key and message to Server 2
         app.logger.info("Sending public key to Server 2 for encryption.")
-        response = requests.post('http://server2:5001/encrypt', json={
+        response = requests.post(f"{SERVER2_URL}/encrypt", json={
             'message': message,
             'public_key': rsa_public_key
         })
@@ -124,21 +127,24 @@ def rsa_route():
         app.logger.exception("Exception occurred in rsa_route:")
         return jsonify({'success': False, 'error': str(e)}), 500
 
-# --- Kyber Key Encapsulation ---
+# Crystals Kyber
 @app.route('/kyber', methods=['GET'])
 def kyber_route():
-    # Generate Kyber key pair
+    # Generate key pair
     kyber_public_key, kyber_secret_key = shadow_crypt.kyber_keygen()
-    # Convert public key to hex string for transmission
     kyber_public_key_hex = kyber_public_key.hex() if isinstance(kyber_public_key, bytes) else str(kyber_public_key)
-    response = requests.post('http://server2:5001/kyber_encapsulate', data=kyber_public_key_hex)
+
+    # Send the public key and message to Server 2
+    response = requests.post(f"{SERVER2_URL}/kyber_encapsulate", data=kyber_public_key_hex)
     if response.status_code != 200:
         return jsonify({'success': False, 'error': 'Error contacting Server 2'}), response.status_code
     resp = response.json()
+
     if 'ciphertext' not in resp:
         return jsonify({'success': False, 'error': 'Kyber encapsulation failed at Server 2'})
     ciphertext_hex = resp['ciphertext']
-    # Decapsulate using our secret key
+
+    # Decapsulation
     shared_secret = shadow_crypt.kyber_decapsulate(bytes.fromhex(ciphertext_hex), kyber_secret_key)
     return jsonify({
         'success': True,
@@ -148,17 +154,17 @@ def kyber_route():
         'shared_secret': shared_secret.hex() if isinstance(shared_secret, bytes) else str(shared_secret)
     })
 
-# --- NTRU Key Encapsulation ---
+# NTRU
 @app.route('/ntru', methods=['GET'])
 def ntru_route():
-    # Generate NTRU key pair (keys are lists of integers)
+    # Generate key pair
     ntru_public_key, ntru_private_key = shadow_crypt.ntru_generate_keypair()
-    # Convert keys to bytes then to hex strings for transmission.
+
     ntru_public_key_hex = bytes(ntru_public_key).hex()
     ntru_private_key_hex = bytes(ntru_private_key).hex()
     
-    # Send the public key (hex) to Server 2 for encapsulation.
-    response = requests.post('http://server2:5001/ntru_encapsulate', data=ntru_public_key_hex)
+    # Send the public key to Server 2
+    response = requests.post(f"{SERVER2_URL}/ntru_encapsulate", data=ntru_public_key_hex)
     if response.status_code != 200:
         return jsonify({'success': False, 'error': 'Error contacting Server 2'}), response.status_code
     
@@ -168,8 +174,7 @@ def ntru_route():
     
     ciphertext_hex = resp['ciphertext']
     
-    # Decapsulate using our private key.
-    # Convert our private key from list of ints to bytes, and convert ciphertext from hex to bytes.
+    # Decapsulation
     shared_secret = shadow_crypt.ntru_decapsulate(ntru_private_key, bytes.fromhex(ciphertext_hex))
     final_key = hashlib.sha256(bytes(shared_secret)).hexdigest()
     
@@ -182,6 +187,6 @@ def ntru_route():
         'final_key': final_key
     })
 
-
+# Main
 if __name__ == '__main__':
     app.run(host="0.0.0.0", port=5000, debug=True)

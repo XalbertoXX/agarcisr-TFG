@@ -6,20 +6,24 @@ from utils.database import save_test_results
 def show_test_protocols(conn, selected_protocol, protocol_details_df):
     st.write("⬇️ Here is the magic button 🔥")
     user_message = ""
+
     # RSA test for input
     if selected_protocol.lower().startswith('rsa'):
         user_message = st.text_area("Enter a message for the fun...", value="Hello, World!", placeholder="Hello, World!")
+
     # Other protocol test
     if st.button(f'Test {selected_protocol}'):
         if not protocol_details_df.empty:
             endpoint = protocol_details_df['endpoint'].iloc[0]
             result = test_protocol(endpoint, user_message)
+
             # If retrieval from operation is performed correctly then proceeds
             if result is not None:
                 response_time = result["response_time"]
                 bandwidth = result["bandwidth"]
                 encryption_overhead = result["encryption_overhead"]
                 response_json = result["response_json"]
+                
                 # Save results
                 save_test_results(conn, selected_protocol, response_time, bandwidth, encryption_overhead)
                 

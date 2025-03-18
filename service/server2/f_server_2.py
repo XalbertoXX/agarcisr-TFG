@@ -4,22 +4,18 @@ import shadow_crypt
 
 app = Flask(__name__)
 
-# --- Diffie-Hellman Key Exchange ---
+# Diffie-Hellman
 @app.route('/receive_public_key', methods=['POST'])
 def receive_public_key():
     try:
-        # Receive Server 1's public key as a hex string,
-        # convert it to bytes, then to a list of ints.
+        # Receive public key 
         public_key_from_server1 = list(bytes.fromhex(request.data.decode()))
         
-        # Generate our own DH key pair (keys are lists of ints)
+        # Generate key pair
         private_key2, public_key2 = shadow_crypt.generate_dh_key()
-        
-        # Compute the shared key using our private key and Server 1's public key
         shared_key = shadow_crypt.derive_dh_shared_key(private_key2, public_key_from_server1)
         final_key = hashlib.sha256(bytes(shared_key)).hexdigest()
         
-        # Convert our public key (list of ints) to a hex string for transmission
         server_public_key_hex = bytes(public_key2).hex()
         server_private_key_hex = bytes(private_key2).hex()
         
@@ -32,18 +28,16 @@ def receive_public_key():
     except Exception as e:
         return jsonify({'success': False, 'error': f'Key exchange failed: {str(e)}'})
 
-# --- Elliptic Curve Diffie-Hellman Key Exchange ---
+# Elliptic Curve Diffie-Hellman
 @app.route('/receive_public_key_ell_curve', methods=['POST'])
 def receive_public_key_ell_curve():
     try:
-        # Receive Server 1's public key as a hex string.
+        # Receive public key
         client_pub_hex = request.data.decode()
-        # Convert hex string to bytes.
         client_pub_bytes = bytes.fromhex(client_pub_hex)
         
-        # Generate our own ECDH key pair.
+        # Generate key pair.
         private_key, public_key = shadow_crypt.generate_ecdh_key()
-        # Compute the shared key using our private key and client's public key.
         shared_key = shadow_crypt.derive_ecdh_shared_key(private_key, client_pub_bytes)
         final_key = hashlib.sha256(bytes(shared_key)).hexdigest()
         
@@ -60,16 +54,16 @@ def receive_public_key_ell_curve():
     except Exception as e:
         return jsonify({'success': False, 'error': str(e)})
 
-# --- RSA Encryption ---
+# RSA 
 @app.route('/encrypt', methods=['POST'])
 def encrypt():
     try:
+        # Get the encrypted message
         data = request.get_json()
         public_key = data['public_key']
         message = data['message']
-        # Get the encrypted message as a list
+
         encrypted_message_list = shadow_crypt.rsa_encrypt(public_key, message)
-        # Convert list to bytes
         encrypted_message_bytes = bytes(encrypted_message_list)
         
         return jsonify({
@@ -79,11 +73,11 @@ def encrypt():
     except Exception as e:
         return jsonify({'success': False, 'error': str(e)})
 
-# --- Kyber Key Encapsulation ---
+# Crystals Kyber
 @app.route('/kyber_encapsulate', methods=['POST'])
 def kyber_encapsulate():
     try:
-        # Expect public key as a hex string
+        # Expect public key
         public_key_hex = request.data.decode()
         public_key = bytes.fromhex(public_key_hex)
         ciphertext, shared_secret = shadow_crypt.kyber_encapsulate(public_key)
@@ -95,19 +89,17 @@ def kyber_encapsulate():
     except Exception as e:
         return jsonify({'success': False, 'error': str(e)})
 
-# --- NTRU Key Encapsulation ---
+# NTRU
 @app.route('/ntru_encapsulate', methods=['POST'])
 def ntru_encapsulate():
     try:
-        # Expect the public key as a hex string from Server 1.
+        # Expect the public key from Server 1 
         public_key_hex = request.data.decode()
-        # Convert hex string to bytes.
         public_key = bytes.fromhex(public_key_hex)
         
-        # Perform encapsulation using the provided public key.
+        # Perform encapsulation
         ciphertext, shared_secret = shadow_crypt.ntru_encapsulate(public_key)
         
-        # Convert the resulting ciphertext and shared secret (lists of ints) to bytes and then hex strings.
         return jsonify({
             'success': True,
             'ciphertext': bytes(ciphertext).hex(),
@@ -116,5 +108,6 @@ def ntru_encapsulate():
     except Exception as e:
         return jsonify({'success': False, 'error': str(e)})
 
+# Main
 if __name__ == '__main__':
     app.run(host="0.0.0.0", port=5001, debug=True)
