@@ -4,6 +4,11 @@ import shadow_crypt
 
 app = Flask(__name__)
 
+# Health check for Render
+@app.route('/health')
+def health():
+    return jsonify({"status": "ok"}), 200
+
 # Diffie-Hellman
 @app.route('/receive_public_key', methods=['POST'])
 def receive_public_key():
