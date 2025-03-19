@@ -8,6 +8,13 @@ def get_connection():
         st.session_state.conn = st.connection("supabase", type=SupabaseConnection)
     return st.session_state.conn
 
+# Get text content to fill the page
+def get_page_content(conn, section_key):
+    result = conn.table("webpage_contents").select("content").eq("section_key", section_key).execute()
+    if result.data:
+        return result.data[0]["content"]
+    return None
+
 # Obtain protocol data
 def get_protocols(conn):
     protocols_result = conn.table("protocols").select("*").execute()

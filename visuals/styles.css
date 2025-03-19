@@ -1,0 +1,48 @@
+/* Main page styles */
+.protocol-header {
+    font-size: 40px;
+    font-weight: bold;
+    color: #D84040;
+    margin-bottom: 15px;
+}
+
+/* FAQs styling*/
+.faq-header {
+    font-size: 40px;
+    font-weight: bold;
+    color: #D84040;
+    text-align: center;
+    margin-bottom: 30px;
+}
+.faq-question {
+    font-size: 24px;
+    font-weight: bold;
+    color: #D84040;
+    margin-top: 20px;
+}
+.faq-answer {
+    font-size: 18px;
+    color: #EEEEEE;
+    margin-bottom: 30px;
+}
+.contact-section {
+    text-align: center;
+    margin-top: 50px;
+    padding: 20px;
+    background-color: #1D1616;
+    border-radius: 10px;
+}
+
+/* Footer styling */
+.wrapper {
+    height: 20vh; 
+    position: relative;
+}
+.footer {
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    width: 100%;
+    text-align: center;
+    color: #d8404094;
+}
