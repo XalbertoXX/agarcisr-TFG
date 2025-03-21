@@ -34,13 +34,11 @@ else:
 # Sidebar: Protocol Selection & Details
 with st.sidebar:
     load_css()
-
     st.markdown('<div class="protocol-header">PROTOCOLS LIST</div>', unsafe_allow_html=True)
     selected_protocol = st.sidebar.selectbox("Select your favorite 📍", protocol_list)
 
     # Obtain the details for the selected protocol
     protocol_details_df = get_protocol_details(conn, selected_protocol)
-
     st.title("Protocol Details 🧐")
     if not protocol_details_df.empty:
         st.sidebar.info(protocol_details_df['description'].iloc[0])
@@ -68,15 +66,16 @@ with tab2:
 with tab3:
     show_compare_protocols(conn, protocol_list)
 
-# Tab 3 Frequently asked questions
+# Tab 4  Frequently asked questions
 with tab4:
     show_questions()
-st.markdown('<div class="wrapper">', unsafe_allow_html=True)
+
+st.markdown('<div class="wrapper"></div>', unsafe_allow_html=True)
+
 # Footer
 st.markdown(
     """<div class="footer">
         <p>Made with ❤️ by... Me?</p>
     </div>""",unsafe_allow_html=True,
 )
-
 st.markdown('</div>', unsafe_allow_html=True)

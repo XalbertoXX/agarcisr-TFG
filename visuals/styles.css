@@ -35,7 +35,11 @@
 
 /* Footer styling */
 .wrapper {
-    height: 20vh; 
+    height: 30vh; 
+    position: relative;
+}
+.big-wrapper {
+    height: 100vh; 
     position: relative;
 }
 .footer {
