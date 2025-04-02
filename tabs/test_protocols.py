@@ -4,9 +4,11 @@ from utils.database import save_test_results
 
 # Testing protocol tab
 def show_test_protocols(conn, selected_protocol, protocol_details_df):
-    st.write("⬇️ Here is the magic button 🔥")
+    st.write("⬇️ Here is the magic button... What does it do? Great question! In the left side 👀 you can see a deployable button followed by a short description of the current CHOSEN one. "
+    "Now select the one you want and simply come back here to have a go at it 🔥")
     user_message = ""
-
+    st.sidebar.markdown("---") 
+    
     # RSA test for input
     if selected_protocol.lower().startswith('rsa'):
         user_message = st.text_area("Enter a message for the fun...", value="Hello, World!", placeholder="Hello, World!")

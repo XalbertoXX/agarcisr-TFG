@@ -55,12 +55,13 @@ Se utiliza una base de datos PostgreSQL para la persistencia de diversos compone
 
 1. **protocols**: Esta tabla almacena la información sobre los protocolos de intercambio de claves, incluyendo su nombre, descripción breve, más detallada y extensa de este, endpoint asociado para ser llamado en los servicios.
 2. **protocol_performance**: En esta tabla se registran los resultados de las pruebas de rendimiento de los protocolos, como el tiempo de ejecución de cada prueba y la fecha de registro.
-
+3. **protocol_visuals**: En esta tabla se incluyen elementos visuales como imágenes para permitir su visualización en la web mediante un almacenaje eficiente.
+4. **webpage_contents**: En esta tabla se registra el texto de la página principal, quitando carga visual al código y haciendo un uso más profesional de los recursos.
 #### Esquema de la Base de Datos
 
 El esquema de la base de datos está diseñado de manera que permita una fácil expansión y mantenimiento, siguiendo las mejores prácticas de diseño relacional para garantizar la integridad y consistencia de los datos almacenados:
 
-![image](https://github.com/user-attachments/assets/b2f58e88-6647-4e89-9dfb-0bc72d2a97c8)
+![image](https://github.com/user-attachments/assets/b068a589-eb8b-4c84-9ed0-3115439df032)
 <p align="right"><i>Figura 1</i></p>
 
 ### Backend: ⚗️ Flask & Docker 🐳

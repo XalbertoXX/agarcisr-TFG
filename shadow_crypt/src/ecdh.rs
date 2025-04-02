@@ -2,7 +2,7 @@ use pyo3::prelude::*;
 use x25519_dalek::{StaticSecret, PublicKey};
 use rand::rngs::OsRng;
 
-// Elliptic Curve Diffie-Hellman
+// Elliptic Curve Diffie-Hellman key generation
 #[pyfunction]
 pub fn generate_ecdh_key() -> PyResult<(Vec<u8>, Vec<u8>)> {
     let private_key = StaticSecret::random_from_rng(OsRng);
@@ -11,6 +11,7 @@ pub fn generate_ecdh_key() -> PyResult<(Vec<u8>, Vec<u8>)> {
     Ok((private_key.to_bytes().to_vec(), public_key.as_bytes().to_vec()))
 }
 
+// Elliptic Curve Diffie-Hellman key derivation
 #[pyfunction]
 pub fn derive_ecdh_shared_key(private_key_bytes: Vec<u8>, server_public_key_bytes: Vec<u8>) -> PyResult<Vec<u8>> {
     let private_key = StaticSecret::from(<[u8; 32]>::try_from(private_key_bytes.as_slice()).unwrap());

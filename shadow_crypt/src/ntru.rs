@@ -11,6 +11,7 @@ use ntrust_native::{
     CRYPTO_BYTES,
 };
 
+// NTRU key generation
 pub fn generate_ntru_keys() -> PyResult<(Vec<u8>, Vec<u8>)> {
     let mut rng = AesState::new();
     let mut pk = [0u8; CRYPTO_PUBLICKEYBYTES];
@@ -22,6 +23,7 @@ pub fn generate_ntru_keys() -> PyResult<(Vec<u8>, Vec<u8>)> {
     Ok((pk.to_vec(), sk.to_vec()))
 }
 
+// NTRU key ecnryption
 pub fn ntru_encrypt(public_key: &[u8]) -> PyResult<(Vec<u8>, Vec<u8>)> {
     if public_key.len() != CRYPTO_PUBLICKEYBYTES {
         return Err(PyValueError::new_err("Invalid public key length"));
@@ -40,6 +42,7 @@ pub fn ntru_encrypt(public_key: &[u8]) -> PyResult<(Vec<u8>, Vec<u8>)> {
     Ok((ct.to_vec(), ss.to_vec()))
 }
 
+// NTRU key decryption
 pub fn ntru_decrypt(private_key: &[u8], ciphertext: &[u8]) -> PyResult<Vec<u8>> {
     if private_key.len() != CRYPTO_SECRETKEYBYTES {
         return Err(PyValueError::new_err("Invalid private key length"));

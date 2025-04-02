@@ -1,6 +1,7 @@
 import streamlit as st
 from utils.style_loader import load_css
 
+# Prompts all the frequently asked questions
 def show_questions():
     load_css()
 

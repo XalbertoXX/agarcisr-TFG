@@ -13,7 +13,7 @@ use rsa::{generate_rsa_key, rsa_encrypt, rsa_decrypt};
 use kyber::{kyber_keygen, kyber_encapsulate, kyber_decapsulate};
 use ntru::{ntru_generate_keypair, ntru_encapsulate, ntru_decapsulate};
 
-
+// Function exposition to Python code from all Rust files
 #[pymodule]
 fn shadow_crypt(m: &Bound<'_, PyModule>) -> PyResult<()> {
     m.add_function(wrap_pyfunction!(generate_dh_key, m)?)?;
