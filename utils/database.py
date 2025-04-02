@@ -58,3 +58,13 @@ def load_test_results(conn, protocol_name):
     else:
         st.error("Protocol endpoint not found for loading test results.")
         return []
+
+# Get storage url for supabase bucket
+def get_storage_path(conn, endpoint):
+    res = conn.table("protocol_visuals") \
+              .select("storage_path") \
+              .eq("protocol_endpoint", endpoint) \
+              .execute()
+    if res.data and len(res.data) > 0:
+        return res.data[0]["storage_path"]
+    return None

@@ -1,6 +1,6 @@
 import streamlit as st
 from utils.protocol_testing import test_protocol
-from utils.database import save_test_results
+from utils.database import save_test_results, get_storage_path
 
 # Testing protocol tab
 def show_test_protocols(conn, selected_protocol, protocol_details_df):
@@ -32,18 +32,22 @@ def show_test_protocols(conn, selected_protocol, protocol_details_df):
                 # Display information
                 st.markdown(f"## 🎉 The protocol {selected_protocol} was tested successfully!\n\n"
                         "During this time the program sent a request to the server A in order to begin with the cryptographic operations. Afterwards it sent the correct petition to the endpoint of server B "
-                        "and the server processed the request back after running through all the needed steps for the selected procedure.")
-                
+                        "and the server processed the request back after running through all the needed steps for the selected procedure.")    
                 st.markdown(f"### ⏳ Response Time: {response_time:.3f} seconds")
                 st.markdown(f"### 📶 Bandwidth Usage: {bandwidth:.2f} Mbps")
                 if encryption_overhead is not None:
                     st.markdown(f"### 🔐 Encryption Overhead: {encryption_overhead} bytes")
-                                               
-                # Retrieve the explanation template from protocols table
+
+                # Retrieve the explanation template and resources from protocols table
                 explanation_template = protocol_details_df['protocol_explanation'].iloc[0]
                 explanation = explanation_template.format(**response_json)
                 formatted_explanation = f'<div style="max-width:800px; margin: 0 auto; text-align:left;">{explanation}</div>'
                 st.markdown(formatted_explanation, unsafe_allow_html=True)
+                storage_url = get_storage_path(conn, endpoint)
+                if storage_url:
+                    st.image(storage_url, caption="Protocol Visuals", use_container_width=True)
+                else:
+                    st.warning("No image URL found for this protocol.")
                 st.write("The lower the response time, the better the performance of the protocol. 🚀\n"
                         "For more information, check the interactive charts on the 'Compare Protocols' tab. 📈\n\nTchau! 👋🏽")
             else:
