@@ -175,7 +175,7 @@ def ntru_route():
     ciphertext_hex = resp['ciphertext']
     
     # Decapsulation
-    shared_secret = shadow_crypt.ntru_decapsulate(ntru_private_key, bytes.fromhex(ciphertext_hex))
+    shared_secret= shadow_crypt.ntru_decapsulate(bytes(ntru_private_key), bytes.fromhex(ciphertext_hex))
     final_key = hashlib.sha256(bytes(shared_secret)).hexdigest()
     
     return jsonify({
