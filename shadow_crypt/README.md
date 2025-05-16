@@ -23,7 +23,6 @@ The library is designed to offer comparable security levels (~128-bit security) 
 
 - Rust (with Cargo)
 - Python 3.7+
-- [Maturin](https://maturin.rs/) (install via pip)
 
 ```bash
-pip install maturin
+import shadow_crypt
